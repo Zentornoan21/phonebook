@@ -43,6 +43,13 @@ int main(int argc, char *argv[])
     e = pHead;
     e->pNext = NULL;
 
+#if defined(OPT)
+
+#define TABLE_SIZE 1000
+    entry *ht[TABLE_SIZE] = {NULL};
+    entry *htHead[TABLE_SIZE] = {NULL};
+#endif
+
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
@@ -52,7 +59,17 @@ int main(int argc, char *argv[])
             i++;
         line[i - 1] = '\0';
         i = 0;
+#if defined(OPT)
+        unsigned int index = hashing(line,TABLE_SIZE);
+        if(ht[index]==NULL) {
+            htHead[index] = (entry *) malloc(sizeof(entry));
+            strcpy(htHead[index]->lastName, line);
+            ht[index] = htHead[index];
+        } else
+            ht[index] = append(line,ht[index]);
+#else
         e = append(line, e);
+#endif
     }
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
@@ -64,7 +81,12 @@ int main(int argc, char *argv[])
 
     /* the givn last name to find */
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
+#if defined(OPT)
+    int hash_addr = hashing(input,TABLE_SIZE);
+    e = htHead[hash_addr];
+#else
     e = pHead;
+#endif
 
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
